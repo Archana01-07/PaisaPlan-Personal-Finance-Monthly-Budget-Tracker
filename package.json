@@ -1,0 +1,26 @@
+{
+  "name": "paisaplan",
+  "version": "1.0.0",
+  "description": "PaisaPlan - Personal Finance & Monthly Budget Tracker",
+  "scripts": {
+    "dev": "concurrently -n \"API,CLIENT\" -c \"cyan,teal\" \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "start": "npm run start --prefix backend",
+    "seed": "npm run seed --prefix backend",
+    "test": "npm run test --prefix backend",
+    "build": "npm run build --prefix frontend",
+    "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend"
+  },
+  "keywords": [
+    "personal-finance",
+    "budget-tracker",
+    "mern",
+    "react",
+    "express",
+    "mongodb"
+  ],
+  "author": "PaisaPlan Team",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}
