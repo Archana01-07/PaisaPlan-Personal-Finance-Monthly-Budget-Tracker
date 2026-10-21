@@ -4,6 +4,21 @@ const { MongoMemoryServer } = require('mongodb-memory-server');
 let mongoMemoryServerInstance = null;
 
 async function connectDB() {
+  // If running tests, always use isolated in-memory MongoDB so test runs never wipe user data
+  if (process.env.NODE_ENV === 'test') {
+    try {
+      if (!mongoMemoryServerInstance) {
+        mongoMemoryServerInstance = await MongoMemoryServer.create();
+      }
+      const testUri = mongoMemoryServerInstance.getUri();
+      await mongoose.connect(testUri);
+      return;
+    } catch (err) {
+      console.error('Failed to initialize test in-memory MongoDB:', err.message);
+      throw err;
+    }
+  }
+
   const uri = process.env.MONGODB_URI;
 
   if (uri && !uri.includes('localhost') && !uri.includes('127.0.0.1')) {

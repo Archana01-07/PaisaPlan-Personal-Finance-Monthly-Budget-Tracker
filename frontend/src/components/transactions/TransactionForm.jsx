@@ -5,6 +5,7 @@ import { EXPENSE_CATEGORIES, INCOME_CATEGORIES, PAYMENT_METHODS } from '../../ut
 import { getTodayDateString } from '../../utils/dateUtils';
 import { formatINR, paiseToRupees, rupeesToPaise } from '../../utils/currency';
 import { budgetApi } from '../../api/budgetApi';
+import { useDate } from '../../context/DateContext';
 
 export default function TransactionForm({
   initialData = null,
@@ -13,13 +14,25 @@ export default function TransactionForm({
   isSubmitting = false,
 }) {
   const navigate = useNavigate();
+  const { selectedYear, selectedMonth } = useDate();
+
+  const getDefaultDate = () => {
+    if (initialData?.date) return initialData.date;
+    const now = new Date();
+    if (now.getFullYear() === selectedYear && (now.getMonth() + 1) === selectedMonth) {
+      return getTodayDateString();
+    }
+    const day = String(Math.min(now.getDate(), 28)).padStart(2, '0');
+    const m = String(selectedMonth).padStart(2, '0');
+    return `${selectedYear}-${m}-${day}`;
+  };
 
   const [type, setType] = useState(initialData?.type || 'expense');
   const [amount, setAmount] = useState(initialData ? String(initialData.amountRupees) : '');
   const [category, setCategory] = useState(
     initialData?.category || (type === 'expense' ? EXPENSE_CATEGORIES[0] : INCOME_CATEGORIES[0])
   );
-  const [date, setDate] = useState(initialData?.date || getTodayDateString());
+  const [date, setDate] = useState(getDefaultDate());
   const [description, setDescription] = useState(initialData?.description || '');
   const [paymentMethod, setPaymentMethod] = useState(initialData?.paymentMethod || 'UPI');
   const [notes, setNotes] = useState(initialData?.notes || '');

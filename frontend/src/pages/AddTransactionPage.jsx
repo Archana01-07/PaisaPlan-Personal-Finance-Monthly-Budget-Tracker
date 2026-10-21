@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { transactionApi } from '../api/transactionApi';
+import { useDate } from '../context/DateContext';
 import TransactionForm from '../components/transactions/TransactionForm';
 import Toast from '../components/ui/Toast';
 
 export default function AddTransactionPage() {
   const navigate = useNavigate();
+  const { setMonthAndYear } = useDate();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
@@ -13,6 +15,10 @@ export default function AddTransactionPage() {
     try {
       setIsSubmitting(true);
       await transactionApi.createTransaction(formData);
+      if (formData.date) {
+        const [y, m] = formData.date.split('-');
+        setMonthAndYear(parseInt(m, 10), parseInt(y, 10));
+      }
       setToastMessage('Transaction saved successfully');
       setTimeout(() => {
         navigate('/transactions');

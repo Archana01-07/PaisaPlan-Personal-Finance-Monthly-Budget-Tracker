@@ -55,19 +55,20 @@ async function upsertBudget(req, res, next) {
     }));
 
     // Find and update or create
-    const budget = await Budget.findOneAndUpdate(
-      { userId: req.user._id, year: y, month: m },
-      {
+    let budget = await Budget.findOne({ userId: req.user._id, year: y, month: m });
+    if (budget) {
+      budget.totalLimitPaise = totalLimitPaise;
+      budget.categoryAllocations = mappedAllocations;
+      await budget.save();
+    } else {
+      budget = await Budget.create({
+        userId: req.user._id,
+        year: y,
+        month: m,
         totalLimitPaise,
         categoryAllocations: mappedAllocations,
-      },
-      {
-        new: true,
-        upsert: true,
-        runValidators: true,
-        setDefaultsOnInsert: true,
-      }
-    );
+      });
+    }
 
     const updatedStatus = await getDetailedBudgetStatus(req.user._id, y, m);
 

@@ -60,8 +60,15 @@ const budgetSchema = new mongoose.Schema(
       default: [],
       validate: {
         validator: function (allocations) {
+          if (!allocations || allocations.length === 0) return true;
           const sum = allocations.reduce((acc, curr) => acc + curr.limitPaise, 0);
-          return sum <= this.totalLimitPaise;
+          const update = typeof this.getUpdate === 'function' ? this.getUpdate() : null;
+          const total =
+            this.totalLimitPaise ??
+            update?.totalLimitPaise ??
+            update?.$set?.totalLimitPaise;
+          if (total === undefined) return true;
+          return sum <= total;
         },
         message: 'Total category allocations cannot exceed the total monthly budget',
       },

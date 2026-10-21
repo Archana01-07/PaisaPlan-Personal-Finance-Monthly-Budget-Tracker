@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { transactionApi } from '../api/transactionApi';
+import { useDate } from '../context/DateContext';
 import TransactionForm from '../components/transactions/TransactionForm';
 import LoadingState from '../components/ui/LoadingState';
 import ErrorState from '../components/ui/ErrorState';
@@ -9,6 +10,7 @@ import Toast from '../components/ui/Toast';
 export default function EditTransactionPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { setMonthAndYear } = useDate();
 
   const [transaction, setTransaction] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -37,6 +39,10 @@ export default function EditTransactionPage() {
     try {
       setIsSubmitting(true);
       await transactionApi.updateTransaction(id, formData);
+      if (formData.date) {
+        const [y, m] = formData.date.split('-');
+        setMonthAndYear(parseInt(m, 10), parseInt(y, 10));
+      }
       setToastMessage('Transaction updated successfully');
       setTimeout(() => {
         navigate('/transactions');
