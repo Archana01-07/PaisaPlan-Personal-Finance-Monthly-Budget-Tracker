@@ -1,14 +1,20 @@
 require('dotenv').config();
 const app = require('./app');
 const { connectDB, disconnectDB } = require('./config/db');
+const { ensureSeeded, DEMO_EMAIL, DEMO_PASSWORD } = require('../scripts/seed');
 
 const PORT = process.env.PORT || 5000;
 
 async function startServer() {
   try {
     await connectDB();
+    await ensureSeeded();
+
     const server = app.listen(PORT, () => {
-      console.log(`PaisaPlan API server running on http://localhost:${PORT}`);
+      console.log(`\n======================================================`);
+      console.log(` PaisaPlan API server running on http://localhost:${PORT}`);
+      console.log(` Demo Account Ready: ${DEMO_EMAIL} / ${DEMO_PASSWORD}`);
+      console.log(`======================================================\n`);
     });
 
     const gracefulShutdown = async () => {

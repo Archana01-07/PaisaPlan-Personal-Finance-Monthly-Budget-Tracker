@@ -41,34 +41,50 @@ async function connectDB() {
     try {
       console.log(`Attempting to connect to local MongoDB at ${uri}...`);
       await mongoose.connect(uri, {
-        serverSelectionTimeoutMS: 3000,
+        serverSelectionTimeoutMS: 2000,
       });
       console.log('MongoDB connected successfully to local daemon.');
       return;
     } catch (err) {
-      console.warn(`Local MongoDB daemon not reachable (${err.message}). Starting embedded in-memory MongoDB...`);
+      console.warn(`Local MongoDB daemon not reachable on default port (${err.message}). Starting embedded local MongoDB...`);
     }
   }
 
-  // Fallback to MongoMemoryServer for flawless zero-dependency local operation
+  // Fallback to MongoMemoryServer for zero-dependency persistent local operation
   try {
     const path = require('path');
     const os = require('os');
     const fs = require('fs');
     const dbPath = process.env.MEMORY_DB_PATH || path.join(os.homedir(), '.paisaplan-dev-db');
-    // Ensure the directory exists before starting MongoMemoryServer
     fs.mkdirSync(dbPath, { recursive: true });
-    console.log(`Starting embedded MongoDB (storage: ${dbPath})...`);
-    mongoMemoryServerInstance = await MongoMemoryServer.create({
-      instance: {
-        dbPath,
-        storageEngine: 'wiredTiger',
-      },
-    });
-    const memoryUri = mongoMemoryServerInstance.getUri();
+    console.log(`Starting embedded local MongoDB daemon (persistent storage: ${dbPath})...`);
+
+    // Try starting on default 27017 so local tools can connect directly, or fallback to auto-port
+    try {
+      mongoMemoryServerInstance = await MongoMemoryServer.create({
+        instance: {
+          port: 27017,
+          dbPath,
+          storageEngine: 'wiredTiger',
+        },
+      });
+    } catch (portErr) {
+      console.log('Port 27017 busy or restricted, using dynamic local port...');
+      mongoMemoryServerInstance = await MongoMemoryServer.create({
+        instance: {
+          dbPath,
+          storageEngine: 'wiredTiger',
+        },
+      });
+    }
+
+    let memoryUri = mongoMemoryServerInstance.getUri();
+    if (!memoryUri.includes('/paisaplan')) {
+      memoryUri = memoryUri.replace(/\/+$/, '') + '/paisaplan';
+    }
     await mongoose.connect(memoryUri);
-    console.log(`Connected to embedded MongoDB at ${memoryUri}`);
-    // Write the URI to a temp file so seed scripts can connect to the same instance
+    console.log(`Connected to embedded local MongoDB at ${memoryUri}`);
+    // Write the URI to temp file so other scripts/tools can reference it
     const uriFile = path.join(os.tmpdir(), 'paisaplan-db-uri.txt');
     fs.writeFileSync(uriFile, memoryUri, 'utf8');
   } catch (err) {

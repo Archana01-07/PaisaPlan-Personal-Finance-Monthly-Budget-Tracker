@@ -17,17 +17,23 @@ const DEMO_NAME = 'Sriman Student';
 if (!process.env.MONGODB_URI || process.env.MONGODB_URI.includes('localhost')) {
   const uriFile = path.join(os.tmpdir(), 'paisaplan-db-uri.txt');
   if (fs.existsSync(uriFile)) {
-    const savedUri = fs.readFileSync(uriFile, 'utf8').trim();
+    let savedUri = fs.readFileSync(uriFile, 'utf8').trim();
     if (savedUri) {
+      if (!savedUri.includes('/paisaplan')) {
+        savedUri = savedUri.replace(/\/+$/, '') + '/paisaplan';
+      }
       console.log(`Using running server URI from temp file: ${savedUri}`);
       process.env.MONGODB_URI = savedUri;
     }
   }
 }
 
-async function seed() {
+async function seed(options = {}) {
+  const { disconnectOnFinish = true } = options;
   console.log('--- Starting PaisaPlan Demo Seed ---');
-  await connectDB();
+  if (mongoose.connection.readyState !== 1) {
+    await connectDB();
+  }
 
   try {
     // 1. Find or create demo user
@@ -310,6 +316,171 @@ async function seed() {
 
     await Transaction.insertMany(septTransactions);
 
+    // 4.1 Create October 2026 Budget (Current Active Month: Total: ₹26,000)
+    console.log('Creating October 2026 Monthly Budget...');
+    await Budget.create({
+      userId,
+      year: 2026,
+      month: 10,
+      totalLimitPaise: rupeesToPaise(26000),
+      categoryAllocations: [
+        { category: 'Rent / Hostel', limitPaise: rupeesToPaise(8500) },
+        { category: 'Food & dining', limitPaise: rupeesToPaise(4500) },
+        { category: 'Transport', limitPaise: rupeesToPaise(2500) },
+        { category: 'Books & supplies', limitPaise: rupeesToPaise(2000) },
+        { category: 'Entertainment', limitPaise: rupeesToPaise(1500) },
+        { category: 'Subscriptions', limitPaise: rupeesToPaise(700) },
+        { category: 'Mobile recharge', limitPaise: rupeesToPaise(500) },
+        { category: 'Other', limitPaise: rupeesToPaise(5800) },
+      ],
+    });
+
+    // 4.2 Create October 2026 Transactions
+    console.log('Seeding October 2026 Transactions (Current Month)...');
+    const octTransactions = [
+      {
+        userId,
+        type: 'income',
+        amountPaise: rupeesToPaise(22000),
+        category: 'Allowance',
+        date: '2026-10-01',
+        description: 'Monthly Allowance from Parents',
+        paymentMethod: 'Bank transfer',
+        notes: 'Hostel and living allowance for October',
+      },
+      {
+        userId,
+        type: 'income',
+        amountPaise: rupeesToPaise(14000),
+        category: 'Freelance',
+        date: '2026-10-14',
+        description: 'React Dashboard UI Project Payout',
+        paymentMethod: 'UPI',
+        notes: 'Freelance client payment',
+      },
+      {
+        userId,
+        type: 'expense',
+        amountPaise: rupeesToPaise(8500),
+        category: 'Rent / Hostel',
+        date: '2026-10-02',
+        description: 'Campus Hostel & Mess Advance',
+        paymentMethod: 'Bank transfer',
+        notes: 'Room fee October',
+      },
+      {
+        userId,
+        type: 'expense',
+        amountPaise: rupeesToPaise(980),
+        category: 'Food & dining',
+        date: '2026-10-04',
+        description: 'Supermarket Groceries & Fruits',
+        paymentMethod: 'Debit card',
+        notes: 'Monthly staples and healthy food',
+      },
+      {
+        userId,
+        type: 'expense',
+        amountPaise: rupeesToPaise(349),
+        category: 'Mobile recharge',
+        date: '2026-10-06',
+        description: 'Prepaid Data Plan Recharge',
+        paymentMethod: 'UPI',
+        notes: '28-day 5G data plan',
+      },
+      {
+        userId,
+        type: 'expense',
+        amountPaise: rupeesToPaise(209),
+        category: 'Subscriptions',
+        date: '2026-10-07',
+        description: 'Spotify Student Premium',
+        paymentMethod: 'Credit card',
+        notes: 'Monthly music streaming',
+      },
+      {
+        userId,
+        type: 'expense',
+        amountPaise: rupeesToPaise(850),
+        category: 'Transport',
+        date: '2026-10-09',
+        description: 'Metro SmartCard Top-up',
+        paymentMethod: 'UPI',
+        notes: 'Monthly transit pass',
+      },
+      {
+        userId,
+        type: 'expense',
+        amountPaise: rupeesToPaise(1200),
+        category: 'Food & dining',
+        date: '2026-10-12',
+        description: 'Study Group Dinner & Cafeteria',
+        paymentMethod: 'UPI',
+        notes: 'Team project dinner',
+      },
+      {
+        userId,
+        type: 'expense',
+        amountPaise: rupeesToPaise(1150),
+        category: 'Books & supplies',
+        date: '2026-10-15',
+        description: 'Distributed Systems & Cloud Textbook',
+        paymentMethod: 'Debit card',
+        notes: 'Semester reference book',
+      },
+      {
+        userId,
+        type: 'expense',
+        amountPaise: rupeesToPaise(199),
+        category: 'Subscriptions',
+        date: '2026-10-16',
+        description: 'Cloud Storage 100GB',
+        paymentMethod: 'UPI',
+        notes: 'Project code & thesis backup',
+      },
+      {
+        userId,
+        type: 'expense',
+        amountPaise: rupeesToPaise(420),
+        category: 'Transport',
+        date: '2026-10-18',
+        description: 'Cab Ride to Tech Seminar',
+        paymentMethod: 'UPI',
+        notes: 'Campus commute',
+      },
+      {
+        userId,
+        type: 'expense',
+        amountPaise: rupeesToPaise(840),
+        category: 'Food & dining',
+        date: '2026-10-21',
+        description: 'Campus Canteen & Weekend Snacks',
+        paymentMethod: 'Cash',
+        notes: 'Weekly snacks',
+      },
+      {
+        userId,
+        type: 'expense',
+        amountPaise: rupeesToPaise(750),
+        category: 'Entertainment',
+        date: '2026-10-23',
+        description: 'Movie Night & Popcorn',
+        paymentMethod: 'UPI',
+        notes: 'Weekend relax',
+      },
+      {
+        userId,
+        type: 'expense',
+        amountPaise: rupeesToPaise(280),
+        category: 'Other',
+        date: '2026-10-24',
+        description: 'Stationery & Project Printing',
+        paymentMethod: 'UPI',
+        notes: 'Sprint report documentation',
+      },
+    ];
+    await Transaction.insertMany(octTransactions);
+
     // 5. Create August 2026 Data (Total: ₹18,040 -> so Sept spending is exactly ₹500 more than August!)
     console.log('Seeding August 2026 transactions for trend and comparison...');
     await Budget.create({
@@ -458,12 +629,36 @@ async function seed() {
     console.log('Food & Dining: ₹4,280 (107% used, ₹280 over budget)');
     console.log('Transport: ₹2,140 (₹360 remaining)');
     console.log('August 2026 Expenses: ₹18,040 (September spent ₹500 more)');
+    console.log('October 2026 Expenses: ₹15,727 (Current active month)');
     console.log('===============================================\n');
   } catch (err) {
     console.error('Error during demo seeding:', err);
-    process.exit(1);
+    if (disconnectOnFinish) {
+      process.exit(1);
+    }
+    throw err;
   } finally {
-    await disconnectDB();
+    if (disconnectOnFinish) {
+      await disconnectDB();
+    }
+  }
+}
+
+async function ensureSeeded() {
+  try {
+    const demoUser = await User.findOne({ email: DEMO_EMAIL });
+    const txCount = demoUser ? await Transaction.countDocuments({ userId: demoUser._id }) : 0;
+    if (!demoUser || txCount === 0) {
+      console.log('Demo user or transactions missing. Auto-seeding demo dataset...');
+      await seed({ disconnectOnFinish: false });
+    } else {
+      const passwordHash = await User.hashPassword(DEMO_PASSWORD);
+      demoUser.passwordHash = passwordHash;
+      await demoUser.save();
+      console.log(`Demo user verified and active: ${DEMO_EMAIL}`);
+    }
+  } catch (err) {
+    console.error('Notice: Auto-seed check error:', err.message);
   }
 }
 
@@ -471,4 +666,4 @@ if (require.main === module) {
   seed();
 }
 
-module.exports = { seed };
+module.exports = { seed, ensureSeeded, DEMO_EMAIL, DEMO_PASSWORD };

@@ -22,6 +22,22 @@ export default function SignInPage() {
     setGeneralError('');
   };
 
+  const handleQuickDemoLogin = async () => {
+    setEmail('demo@paisaplan.com');
+    setPassword('Demo@12345');
+    setGeneralError('');
+    try {
+      setIsSubmitting(true);
+      await login('demo@paisaplan.com', 'Demo@12345');
+      navigate(from, { replace: true });
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Invalid email or password. Please try again.';
+      setGeneralError(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setGeneralError('');
@@ -126,17 +142,27 @@ export default function SignInPage() {
           </form>
 
           {/* Academic Demonstration Helper */}
-          <div className="mt-5 p-3 bg-slate-50 border border-slate-200 rounded-xl text-center">
-            <span className="text-[11px] text-slate-500 block mb-1">
-              Project Demonstration Account:
+          <div className="mt-5 p-3.5 bg-slate-50 border border-slate-200 rounded-xl text-center">
+            <span className="text-[11px] font-medium text-slate-500 block mb-2">
+              Ready-to-Use Demo Account (<code className="text-teal-700 bg-white px-1.5 py-0.5 rounded border border-slate-200">demo@paisaplan.com</code>)
             </span>
-            <button
-              type="button"
-              onClick={fillDemoCredentials}
-              className="text-xs font-semibold text-teal-700 hover:text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 px-3 py-1 rounded-md transition-colors cursor-pointer"
-            >
-              Auto-fill Demo Credentials
-            </button>
+            <div className="flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={fillDemoCredentials}
+                className="text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-300 px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-2xs"
+              >
+                Auto-fill
+              </button>
+              <button
+                type="button"
+                disabled={isSubmitting}
+                onClick={handleQuickDemoLogin}
+                className="text-xs font-semibold text-white bg-teal-600 hover:bg-teal-700 px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs disabled:opacity-60"
+              >
+                {isSubmitting ? 'Signing In...' : 'Instant Demo Sign In'}
+              </button>
+            </div>
           </div>
 
           <div className="mt-6 text-center text-xs text-slate-500">
