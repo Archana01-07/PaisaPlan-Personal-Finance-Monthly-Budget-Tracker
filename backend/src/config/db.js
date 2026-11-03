@@ -21,6 +21,17 @@ async function connectDB() {
 
   const uri = process.env.MONGODB_URI;
 
+  // In production, require an external URI — never fall back to in-memory
+  if (process.env.NODE_ENV === 'production') {
+    if (!uri) {
+      throw new Error('MONGODB_URI environment variable is required in production. Set it in your Vercel project settings.');
+    }
+    console.log(`Connecting to MongoDB at: ${uri.split('@')[1] || uri}`);
+    await mongoose.connect(uri, { serverSelectionTimeoutMS: 10000 });
+    console.log('MongoDB connected successfully.');
+    return;
+  }
+
   if (uri && !uri.includes('localhost') && !uri.includes('127.0.0.1')) {
     // External URI (like MongoDB Atlas)
     try {
