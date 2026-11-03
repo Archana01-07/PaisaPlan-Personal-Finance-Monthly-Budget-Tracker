@@ -7,7 +7,7 @@
     "start": "npm run start --prefix backend",
     "seed": "npm run seed --prefix backend",
     "test": "npm run test --prefix backend",
-    "build": "npm run build --prefix frontend",
+    "build": "cd frontend && npm install && ./node_modules/.bin/vite build",
     "install:all": "npm install && npm install --prefix backend && npm install --prefix frontend",
     "vercel-build": "npm run build --prefix frontend"
   },
