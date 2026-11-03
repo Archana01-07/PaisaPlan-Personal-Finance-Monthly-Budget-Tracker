@@ -29,7 +29,7 @@ async function requireAuth(req, res, next) {
       // Clear cookie if invalid or expired
       res.clearCookie('token', {
         httpOnly: true,
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         secure: process.env.NODE_ENV === 'production',
       });
       return res.status(401).json({

@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const { MongoMemoryServer } = require('mongodb-memory-server');
 
 let mongoMemoryServerInstance = null;
 
@@ -7,6 +6,7 @@ async function connectDB() {
   // If running tests, always use isolated in-memory MongoDB so test runs never wipe user data
   if (process.env.NODE_ENV === 'test') {
     try {
+      const { MongoMemoryServer } = require('mongodb-memory-server');
       if (!mongoMemoryServerInstance) {
         mongoMemoryServerInstance = await MongoMemoryServer.create();
       }
@@ -52,6 +52,7 @@ async function connectDB() {
 
   // Fallback to MongoMemoryServer for zero-dependency persistent local operation
   try {
+    const { MongoMemoryServer } = require('mongodb-memory-server');
     const path = require('path');
     const os = require('os');
     const fs = require('fs');

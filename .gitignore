@@ -3,8 +3,7 @@
 .env.*
 *.env
 .env.example
-backend/.env
-backend/.env.*
+# backend/.env is intentionally tracked for demo deployment
 backend/.env.example
 frontend/.env
 frontend/.env.*
