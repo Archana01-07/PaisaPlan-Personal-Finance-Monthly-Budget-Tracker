@@ -16,14 +16,10 @@ const sessions = new Map(); // token -> userId (not strictly needed, JWT is stat
 let nextId = 1;
 function newId() { return String(nextId++); }
 
-// Seed demo user on cold start
-let demoUserId = null;
-async function seedDemo() {
-  const hash = await bcrypt.hash(DEMO_PASSWORD, 10);
-  demoUserId = 'demo-user-1';
-  users.set(demoUserId, { id: demoUserId, name: 'Sriman Student', email: DEMO_EMAIL, passwordHash: hash });
-}
-const seedPromise = seedDemo();
+// Seed demo user synchronously — no async hashing needed
+let demoUserId = 'demo-user-1';
+users.set(demoUserId, { id: demoUserId, name: 'Sriman Student', email: DEMO_EMAIL, passwordHash: null, plainPassword: DEMO_PASSWORD });
+const seedPromise = Promise.resolve();
 
 // Demo transactions (Oct 2026 = current month)
 const demoTransactions = [
@@ -173,8 +169,7 @@ app.post('/api/auth/register', async (req, res) => {
   const existing = [...users.values()].find(u => u.email === email.toLowerCase().trim());
   if (existing) return res.status(409).json({ success: false, message: 'An account with this email address already exists.', errors:[{field:'email',message:'Email already registered'}] });
   const id = newId();
-  const passwordHash = await bcrypt.hash(password, 10);
-  const user = { id, name: name.trim(), email: email.toLowerCase().trim(), passwordHash };
+  const user = { id, name: name.trim(), email: email.toLowerCase().trim(), plainPassword: password };
   users.set(id, user);
   const token = signToken(id);
   sendCookie(res, token);
@@ -187,7 +182,9 @@ app.post('/api/auth/login', async (req, res) => {
   if (!email || !password) return res.status(400).json({ success: false, message: 'Email and password are required.' });
   const user = [...users.values()].find(u => u.email === email.toLowerCase().trim());
   if (!user) return res.status(401).json({ success: false, message: 'Invalid email or password.' });
-  const match = await bcrypt.compare(password, user.passwordHash);
+  const match = user.plainPassword
+    ? password === user.plainPassword
+    : await bcrypt.compare(password, user.passwordHash);
   if (!match) return res.status(401).json({ success: false, message: 'Invalid email or password.' });
   const token = signToken(user.id);
   sendCookie(res, token);
